@@ -4,25 +4,47 @@
 //glut.hを後ろに置かないと，exit関数についてエラーが生じる.
 #pragma comment(lib, "glut32.lib")
 // Rendering
-static NxVec3	gEye(50.0f, 50.0f, 50.0f);
-static NxVec3	gDir(-1.0f,-1.0f,-1.0f);
-static NxVec3	gViewY;
-static int		gMouseX = 0;
-static int		gMouseY = 0;
+static NxVec3	gEye(50.0f, 50.0f, 50.0f);	//Cameraの視点
+static NxVec3	gDir(-1.0f,-1.0f,-1.0f);			//Cameraの向く方向
+static NxVec3	gViewY;								//
+static int		gMouseX = 0;							//マウスポインタの位置X
+static int		gMouseY = 0;							//マウスポインタの位置Y
+static unsigned char gMouseButton[3] = {0};	//マウスのボタンの押下状態
 
 extern NxScene* pScene;
+
+static void MyGLInit(){
+	// Setup default render states
+	glClearColor(0.3f, 0.4f, 0.5f, 1.0);
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_COLOR_MATERIAL);
+
+	// Setup lighting
+	glEnable(GL_LIGHTING);
+	float ambientColor[]	= { 0.1f, 0.1f, 0.1f, 0.0f };
+	float diffuseColor[]	= { 1.0f, 1.0f, 1.0f, 0.0f };		
+	float specularColor[]	= { 0.0f, 0.0f, 0.0f, 0.0f };		
+	float position[]		= { 100.0f, 100.0f, 400.0f, 1.0f };		
+	glLightfv(GL_LIGHT0, GL_AMBIENT, ambientColor);
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseColor);
+	glLightfv(GL_LIGHT0, GL_SPECULAR, specularColor);
+	glLightfv(GL_LIGHT0, GL_POSITION, position);
+	glEnable(GL_LIGHT0);
+	
+	glClearColor(0.5, 0.5, 0.5, 1.0);		//背景色を設定
+}
 
 static void KeyboardCallback(unsigned char key, int x, int y)
 {
 	switch(key)
 	{
-		case 27:	
-			exit(0); 
+		case 27:			//ESCキーが押されたら
+			exit(0);			//プログラムを終了する
 			break;
-		case GLUT_KEY_UP:	case '8':	gEye += gDir*2.0f; break;
-		case GLUT_KEY_DOWN: case '2':	gEye -= gDir*2.0f; break;
-		case GLUT_KEY_LEFT:	case '4':	gEye -= gViewY*2.0f; break;
-		case GLUT_KEY_RIGHT: case '6':	gEye += gViewY*2.0f; break;
+		//case GLUT_KEY_UP:	case '8':	gEye += gDir*2.0f; break;
+		//case GLUT_KEY_DOWN: case '2':	gEye -= gDir*2.0f; break;
+		//case GLUT_KEY_LEFT:	case '4':	gEye -= gViewY*2.0f; break;
+		//case GLUT_KEY_RIGHT: case '6':	gEye += gViewY*2.0f; break;
 	}
 }
 
@@ -35,6 +57,20 @@ static void MouseCallback(int button, int state, int x, int y)
 {
 	gMouseX = x;
 	gMouseY = y;
+	switch(button){
+		case GLUT_LEFT_BUTTON:
+			gMouseButton[0] = ((GLUT_DOWN==state)?1:0);
+			break;
+		case GLUT_MIDDLE_BUTTON:
+			gMouseButton[1] = ((GLUT_DOWN==state)?1:0);
+			break;
+		case GLUT_RIGHT_BUTTON:
+			gMouseButton[2] = ((GLUT_DOWN==state)?1:0);
+			break;
+		default:
+			break;
+	}
+	glutPostRedisplay();
 }
 
 static void MotionCallback(int x, int y)
@@ -42,16 +78,27 @@ static void MotionCallback(int x, int y)
 	int dx = gMouseX - x;
 	int dy = gMouseY - y;
 	
-	gDir.normalize();
-	gViewY.cross(gDir, NxVec3(0,1,0));
+	gDir.normalize();		//カメラの視線ベクトルを正規化
+	gViewY.cross(gDir, NxVec3(0,1,0));	//
 
-	NxQuat qx(NxPiF32 * dx * 20/ 180.0f, NxVec3(0,1,0));
-	qx.rotate(gDir);
-	NxQuat qy(NxPiF32 * dy * 20/ 180.0f, gViewY);
-	qy.rotate(gDir);
-
+	if( gMouseButton[0] && gMouseButton[1] ){
+		//Zoom: Left + Center Buttons Drag
+		gEye -= gDir * 0.5f * dy;
+	}else{
+		if( gMouseButton[0] ){
+			//Rotate: Left Button Drag
+			NxQuat qx(NxPiF32 * dx * 10/ 180.0f, NxVec3(0,1,0));
+			qx.rotate(gDir);
+			NxQuat qy(NxPiF32 * dy * 10/ 180.0f, gViewY);
+			qy.rotate(gDir);
+		}else if( gMouseButton[1] ){
+			//Move: Center Button Drag
+			gEye += 0.1f * (gViewY * dx - NxVec3(0, 1, 0) * dy);
+		}
+	}
 	gMouseX = x;
 	gMouseY = y;
+	glutPostRedisplay();
 }
 
 static void RenderCallback()
@@ -89,12 +136,12 @@ static void RenderCallback()
 			// draw grid
 			glBegin(GL_LINES);
 				int y = 0;
-				for(int i=-10;i<=10;++i) {
-					glVertex3f(i*10,y,-100);
-					glVertex3f(i*10,y,100);
+				for(int i=-100;i<=100;++i) {
+					glVertex3f(i*10,y,-1000);
+					glVertex3f(i*10,y,1000);
 
-					glVertex3f(100,y,i*10);
-					glVertex3f(-100,y,i*10);
+					glVertex3f(1000,y,i*10);
+					glVertex3f(-1000,y,i*10);
 				}
 			glEnd();
 		}

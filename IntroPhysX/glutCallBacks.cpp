@@ -1,3 +1,9 @@
+/*************************************************************************
+ *	glutCallBacks.cpp
+ * @author - Kenichi Yorozu
+ * @description - glut CallBack Functions for Simple Sample Code of Nvidia PhysX
+ ***********************************************************************/
+
 #include <iostream>
 #include <NxPhysics.h>	//Used for PhysX
 #include <GL/glut.h>		//Used for OpenGL (GLUT)
@@ -11,7 +17,8 @@ static int		gMouseX = 0;							//マウスポインタの位置X
 static int		gMouseY = 0;							//マウスポインタの位置Y
 static unsigned char gMouseButton[3] = {0};	//マウスのボタンの押下状態
 
-extern NxScene* pScene;
+extern NxScene* pScene;						//Scene
+extern bool isSimulate;								//Flag for Simulation
 
 static void MyGLInit(){
 	// Setup default render states
@@ -41,10 +48,9 @@ static void KeyboardCallback(unsigned char key, int x, int y)
 		case 27:			//ESCキーが押されたら
 			exit(0);			//プログラムを終了する
 			break;
-		//case GLUT_KEY_UP:	case '8':	gEye += gDir*2.0f; break;
-		//case GLUT_KEY_DOWN: case '2':	gEye -= gDir*2.0f; break;
-		//case GLUT_KEY_LEFT:	case '4':	gEye -= gViewY*2.0f; break;
-		//case GLUT_KEY_RIGHT: case '6':	gEye += gViewY*2.0f; break;
+		case 32:			//Spaceキーが押されたら
+			isSimulate = !isSimulate;		//Simulate状態をON/OFFする
+			break;
 	}
 }
 
@@ -110,8 +116,10 @@ static void RenderCallback()
 		return;
 	}
 	
-	// Start simulation (non blocking)
-	pScene->simulate(1.0f/60.0f);
+	// Start simulation
+	if (isSimulate){
+		pScene->simulate(1.0f/60.0f);
+	}
 	
 	// Clear buffers
 	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -168,8 +176,10 @@ static void RenderCallback()
 	}
 
 	// Fetch simulation results
-	pScene->flushStream();
-	pScene->fetchResults(NX_RIGID_BODY_FINISHED, true);
+	if(isSimulate){
+		pScene->flushStream();
+		pScene->fetchResults(NX_RIGID_BODY_FINISHED, true);
+	}
 
 	glutSwapBuffers();
 }

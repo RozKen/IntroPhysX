@@ -26,6 +26,9 @@ bool CreateGroundPlane();
 NxPhysicsSDK* pPhysicsSDK = NULL;	//PhysX
 NxScene* pScene = NULL;					//Scene
 NxVec3 DefaultGravity(0,-9.8,0);			//Gravity
+bool isSimulate = false;						//Flag for Simulation
+
+using namespace std;							//std–¼‘O‹óŠÔ‚ð—˜—p
 
 	/**
 	 * main
@@ -84,6 +87,12 @@ void main(int argc, char ** argv){
 		NxActor*pActor = pScene->createActor( actorDesc );
 		pActor->userData = (void *)size_t((int)2);
 	}
+	cout << "===Viewport Navigation (Maya Style)===" <<endl;
+	cout << "Rotate: Right Drag" << endl;
+	cout << "Move: Cener Drag" << endl;
+	cout << "Zoom: Right and Center Drag" << endl;
+	cout << "===Simulation Navigation===" << endl;
+	cout << "Simulation ON/OFF: Space Key" << endl;
 
 	/*
 	 *	Render the Scene for each Simulate Time Steps
@@ -98,9 +107,9 @@ void main(int argc, char ** argv){
 	 */
 void InitGLUT(int argc, char ** argv){
 	glutInit(&argc, argv);
-	glutInitWindowSize(512, 512);
+	glutInitWindowSize(640, 480);
 	glutInitDisplayMode(GLUT_RGB|GLUT_DOUBLE|GLUT_DEPTH);
-	int mainHandle = glutCreateWindow("Simple Sample Code of PhysX");
+	int mainHandle = glutCreateWindow("Simple Sample Code of Nvidia PhysX");
 	glutSetWindow(mainHandle);
 	glutDisplayFunc(RenderCallback);
 	glutReshapeFunc(ReshapeCallback);

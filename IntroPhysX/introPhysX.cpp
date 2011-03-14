@@ -40,6 +40,7 @@ void main(int argc, char ** argv){
 	InitScene();
 	/*
 	 *	Create Ground Plane
+	 * Static Actor: has no 'NxBodyDesc'
 	 */
 	{
 		//actor Descriptor with Collection of Shapes.
@@ -66,6 +67,7 @@ void main(int argc, char ** argv){
 	}
 	/*
 	 *	Create a Box Actor
+	 * Dynamic Actor: Rigid Bodies
 	 */
 	{
 		//Create a Body Descriptor
@@ -83,6 +85,7 @@ void main(int argc, char ** argv){
 		actorDesc.shapes.pushBack( &boxDesc );	//Actor‚ÉBody‚ð“o˜^
 		actorDesc.density = 100.0f;	//–§“x10.0
 		actorDesc.globalPose.t = NxVec3(10.0f, 60.0f, 10.0f);		//‰ŠúˆÊ’u(10.0, 10.0, 10.0)
+		
 		//Set userData to NULL if you are not doing anyting with it.
 		NxActor*pActor = pScene->createActor( actorDesc );
 		pActor->userData = (void *)size_t((int)2);
